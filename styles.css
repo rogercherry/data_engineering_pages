@@ -316,6 +316,23 @@ button[aria-pressed="true"] {
   margin: 0.7rem 0 0;
 }
 
+.glossary-item.is-cross-reference-target {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.term-link {
+  color: var(--brand-dark);
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.18em;
+}
+
+.term-link:hover {
+  color: var(--brand);
+  text-decoration-thickness: 0.16em;
+}
+
 .empty-state {
   padding: 2rem;
   text-align: center;

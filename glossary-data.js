@@ -28,7 +28,6 @@ window.GLOSSARY = [
   { term: "Data lake", definition: "Storage that holds large amounts of raw or prepared data in many formats.", example: "Logs, images, and tables can all be kept in a cloud data lake.", category: "Storage" },
   { term: "Data lakehouse", definition: "An architecture combining a data lake’s flexible storage with warehouse-like management and querying.", example: "Teams query governed tables directly over files in cloud storage, without a separate warehouse copy.", category: "Architecture" },
   { term: "Data lineage", definition: "A record of where data came from, how it changed, and where it is used.", example: "Lineage shows that a dashboard metric came from the billing system.", category: "Governance" },
-  { term: "Data마asking_PLACEHOLDER", definition: "placeholder", category: "Governance" },
   { term: "Data mart", definition: "A focused collection of analytical data designed for one team or subject area.", example: "Finance uses a mart containing budgets, invoices, and payments.", category: "Modelling" },
   { term: "Data masking", definition: "Hiding or substituting sensitive values so they can’t be seen while the data stays usable for testing or analysis.", example: "A support dashboard shows customer phone numbers as ***-***-1234.", category: "Governance" },
   { term: "Data mesh", definition: "An organisational approach where domain teams own data products while following shared standards.", example: "The payments team owns and publishes trusted payment data as a product for others to consume.", category: "Architecture" },
