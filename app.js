@@ -163,22 +163,15 @@
   }
 
   function buildQuiz() {
-    const priorLearned = glossary.filter(function (item) {
-      return learned.has(item.term) && !dailyTerms.some(function (daily) { return daily.term === item.term; });
+    const learnedTerms = glossary.filter(function (item) {
+      return learned.has(item.term);
     });
-    const reviewPool = priorLearned.length ? priorLearned : glossary.filter(function (item) {
-      return !dailyTerms.some(function (daily) { return daily.term === item.term; });
-    });
-    const reviewTerms = seededShuffle(reviewPool, hash(todayKey + learned.size)).slice(0, REVIEW_QUESTIONS);
+    const reviewTerms = seededShuffle(learnedTerms, hash(todayKey + learned.size)).slice(0, REVIEW_QUESTIONS);
     quizTerms = dailyTerms.concat(reviewTerms);
     quizQuestions.replaceChildren();
 
     appendQuizPart("Part 1: Today’s terms", dailyTerms, 0);
-    appendQuizPart(
-      priorLearned.length ? "Part 2: Terms you have learned before" : "Part 2: A preview from the glossary",
-      reviewTerms,
-      dailyTerms.length
-    );
+    appendQuizPart("Part 2: Everything you have learned so far", reviewTerms, dailyTerms.length);
     quizResult.hidden = true;
   }
 
@@ -187,6 +180,13 @@
     heading.className = "part-title";
     heading.textContent = title;
     quizQuestions.appendChild(heading);
+
+    if (items.length === 0) {
+      const empty = document.createElement("p");
+      empty.textContent = "Mark a term as learned to add it to this review.";
+      quizQuestions.appendChild(empty);
+      return;
+    }
 
     items.forEach(function (item, localIndex) {
       const index = offset + localIndex;
