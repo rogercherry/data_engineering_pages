@@ -146,7 +146,7 @@
     items.forEach(function (item) {
       const details = document.createElement("details");
       details.className = "glossary-item";
-      details.id = entryIds.get(item.term);
+      details.id = entryIds.get(item);
       details.tabIndex = -1;
 
       const summary = document.createElement("summary");
@@ -257,7 +257,7 @@
         suffix += 1;
       }
       used.add(id);
-      ids.set(item.term, id);
+      ids.set(item, id);
     });
     return ids;
   }
@@ -267,7 +267,7 @@
     items.forEach(function (item) {
       const key = normalise(item.term);
       if (key && !byKey.has(key)) {
-        byKey.set(key, item.term);
+        byKey.set(key, item);
       }
     });
 
@@ -318,13 +318,13 @@
       }
 
       const key = normalise(matched);
-      const term = crossReferences.byKey.get(key);
+      const entry = crossReferences.byKey.get(key);
       const boundedStart = !isWordCharacter(text[start - 1]);
       const boundedEnd = !isWordCharacter(text[end]);
 
-      if (term && key !== currentKey && boundedStart && boundedEnd) {
+      if (entry && key !== currentKey && boundedStart && boundedEnd) {
         fragment.appendChild(document.createTextNode(text.slice(lastIndex, start)));
-        fragment.appendChild(createCrossReference(term, matched));
+        fragment.appendChild(createCrossReference(entry, matched));
         lastIndex = end;
       }
 
@@ -335,14 +335,13 @@
     return fragment;
   }
 
-  function createCrossReference(term, label) {
-    const id = entryIds.get(term);
+  function createCrossReference(entry, label) {
+    const id = entryIds.get(entry);
     const link = document.createElement("a");
     link.className = "term-link";
     link.href = "#" + id;
     link.textContent = label;
-    link.title = "Go to the glossary entry for " + term;
-    link.setAttribute("aria-label", label + " — open glossary entry");
+    link.title = "Go to the glossary entry for " + entry.term;
     link.addEventListener("click", function (event) {
       event.preventDefault();
       openGlossaryEntry(id);
@@ -370,6 +369,9 @@
     target.addEventListener("blur", function handleBlur() {
       target.classList.remove("is-cross-reference-target");
       target.removeEventListener("blur", handleBlur);
+      if (highlighted === target) {
+        highlighted = null;
+      }
     });
     target.scrollIntoView({ block: "center" });
     target.focus({ preventScroll: true });
