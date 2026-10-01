@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Bite-sized, accessible data engineering learning with daily terms, quizzes, and a searchable glossary.">
+    <title>Data Engineering, One Byte at a Time</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="glossary-data.js" defer></script>
+    <script src="app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div>
+        <p class="eyebrow">Data engineering upskilling</p>
+        <h1>One byte at a time</h1>
+        <p>Five terms a day. Plain English. No pressure.</p>
+      </div>
+      <button id="reading-mode" class="secondary" type="button" aria-pressed="false">
+        Easier reading
+      </button>
+    </header>
+
+    <nav class="tabs" aria-label="Main navigation">
+      <a href="#today">Today</a>
+      <a href="#quiz">Daily quiz</a>
+      <a href="#glossary">Glossary</a>
+    </nav>
+
+    <main id="main">
+      <section id="today" aria-labelledby="today-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow" id="today-date"></p>
+            <h2 id="today-heading">Today’s five terms</h2>
+          </div>
+          <p id="progress-summary" class="progress-summary" aria-live="polite"></p>
+        </div>
+        <p class="intro">Read each card, then mark it learned. Your progress stays on this device.</p>
+        <div id="daily-terms" class="card-grid"></div>
+      </section>
+
+      <section id="quiz" aria-labelledby="quiz-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">A quick check-in</p>
+            <h2 id="quiz-heading">Daily quiz</h2>
+          </div>
+          <button id="new-quiz" class="secondary" type="button">Start again</button>
+        </div>
+        <p class="intro">
+          Part 1 checks today’s terms. Part 2 revisits everything you have learned so far.
+          Choose “I’m not sure” whenever you need it.
+        </p>
+        <form id="quiz-form">
+          <div id="quiz-questions"></div>
+          <button class="primary" type="submit">Check my answers</button>
+        </form>
+        <div id="quiz-result" class="result" role="status" tabindex="-1" hidden></div>
+      </section>
+
+      <section id="glossary" aria-labelledby="glossary-heading">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Look things up anytime</p>
+            <h2 id="glossary-heading">Full glossary</h2>
+          </div>
+          <p id="result-count" aria-live="polite"></p>
+        </div>
+        <label class="search-label" for="glossary-search">Search terms, acronyms, or meanings</label>
+        <input id="glossary-search" type="search" autocomplete="off" placeholder="Try “API”, “pipeline”, or “storage”">
+        <div id="glossary-list" class="glossary-list"></div>
+        <p id="no-results" class="empty-state" hidden>No matching terms. Try a shorter word or a different spelling.</p>
+      </section>
+    </main>
+
+    <footer>
+      <p>Learning is not a race. Revisit any card as often as you like.</p>
+    </footer>
+  </body>
+</html>
