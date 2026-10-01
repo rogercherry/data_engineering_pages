@@ -10,12 +10,16 @@
   const REVIEW_QUESTIONS = 5;
   const glossary = window.GLOSSARY;
 
+  const entryIds = buildEntryIds(glossary);
+  const crossReferences = buildCrossReferences(glossary);
+
   const todayKey = new Date().toISOString().slice(0, 10);
   const startDate = localStorage.getItem(STORAGE.startDate) || todayKey;
   localStorage.setItem(STORAGE.startDate, startDate);
 
   let learned = new Set(readList(STORAGE.learned));
   let quizTerms = [];
+  let highlighted = null;
 
   const dayNumber = Math.max(0, daysBetween(startDate, todayKey));
   const dailyTerms = pickDailyTerms(dayNumber);
@@ -24,6 +28,7 @@
   const quizForm = document.querySelector("#quiz-form");
   const quizQuestions = document.querySelector("#quiz-questions");
   const quizResult = document.querySelector("#quiz-result");
+  const searchInput = document.querySelector("#glossary-search");
 
   document.querySelector("#today-date").textContent = new Intl.DateTimeFormat(undefined, {
     weekday: "long",
@@ -94,12 +99,12 @@
       }
 
       const definition = document.createElement("p");
-      definition.textContent = item.definition;
+      definition.appendChild(linkedText(item.definition, item.term));
       card.appendChild(definition);
 
       const example = document.createElement("p");
       example.className = "example";
-      example.textContent = "Example: " + item.example;
+      example.append("Example: ", linkedText(item.example, item.term));
       card.appendChild(example);
 
       const button = document.createElement("button");
@@ -141,18 +146,20 @@
     items.forEach(function (item) {
       const details = document.createElement("details");
       details.className = "glossary-item";
+      details.id = entryIds.get(item.term);
+      details.tabIndex = -1;
 
       const summary = document.createElement("summary");
       summary.textContent = item.term + (item.expansion ? " — " + item.expansion : "");
       details.appendChild(summary);
 
       const definition = document.createElement("p");
-      definition.textContent = item.definition;
+      definition.appendChild(linkedText(item.definition, item.term));
       details.appendChild(definition);
 
       const example = document.createElement("p");
       example.className = "example";
-      example.textContent = "Example: " + item.example;
+      example.append("Example: ", linkedText(item.example, item.term));
       details.appendChild(example);
       glossaryList.appendChild(details);
     });
@@ -230,6 +237,142 @@
       fieldset.appendChild(feedback);
       quizQuestions.appendChild(fieldset);
     });
+  }
+
+  function slugify(value) {
+    return normalise(value)
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "term";
+  }
+
+  function buildEntryIds(items) {
+    const ids = new Map();
+    const used = new Set();
+    items.forEach(function (item) {
+      const base = "glossary-term-" + slugify(item.term);
+      let id = base;
+      let suffix = 2;
+      while (used.has(id)) {
+        id = base + "-" + suffix;
+        suffix += 1;
+      }
+      used.add(id);
+      ids.set(item.term, id);
+    });
+    return ids;
+  }
+
+  function buildCrossReferences(items) {
+    const byKey = new Map();
+    items.forEach(function (item) {
+      const key = normalise(item.term);
+      if (key && !byKey.has(key)) {
+        byKey.set(key, item.term);
+      }
+    });
+
+    const keys = Array.from(byKey.keys()).sort(function (first, second) {
+      return second.length - first.length || first.localeCompare(second);
+    });
+
+    if (keys.length === 0) {
+      return { byKey: byKey, pattern: null };
+    }
+
+    const pattern = new RegExp(keys.map(escapeRegExp).join("|"), "gi");
+    return { byKey: byKey, pattern: pattern };
+  }
+
+  function escapeRegExp(value) {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  function isWordCharacter(character) {
+    return character !== undefined && /[A-Za-z0-9]/.test(character);
+  }
+
+  // Builds a fragment where every mentioned glossary term becomes an internal link.
+  function linkedText(value, currentTerm) {
+    const text = typeof value === "string" ? value : "";
+    const fragment = document.createDocumentFragment();
+
+    if (!crossReferences.pattern || text === "") {
+      fragment.appendChild(document.createTextNode(text));
+      return fragment;
+    }
+
+    const pattern = crossReferences.pattern;
+    const currentKey = currentTerm ? normalise(currentTerm) : "";
+    let lastIndex = 0;
+    let match;
+
+    pattern.lastIndex = 0;
+    while ((match = pattern.exec(text)) !== null) {
+      const matched = match[0];
+      const start = match.index;
+      const end = start + matched.length;
+
+      if (matched.length === 0) {
+        pattern.lastIndex += 1;
+        continue;
+      }
+
+      const key = normalise(matched);
+      const term = crossReferences.byKey.get(key);
+      const boundedStart = !isWordCharacter(text[start - 1]);
+      const boundedEnd = !isWordCharacter(text[end]);
+
+      if (term && key !== currentKey && boundedStart && boundedEnd) {
+        fragment.appendChild(document.createTextNode(text.slice(lastIndex, start)));
+        fragment.appendChild(createCrossReference(term, matched));
+        lastIndex = end;
+      }
+
+      pattern.lastIndex = end;
+    }
+
+    fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+    return fragment;
+  }
+
+  function createCrossReference(term, label) {
+    const id = entryIds.get(term);
+    const link = document.createElement("a");
+    link.className = "term-link";
+    link.href = "#" + id;
+    link.textContent = label;
+    link.title = "Go to the glossary entry for " + term;
+    link.setAttribute("aria-label", label + " — open glossary entry");
+    link.addEventListener("click", function (event) {
+      event.preventDefault();
+      openGlossaryEntry(id);
+    });
+    return link;
+  }
+
+  function openGlossaryEntry(id) {
+    if (searchInput.value !== "") {
+      searchInput.value = "";
+      renderGlossary(glossary);
+    }
+
+    const target = document.getElementById(id);
+    if (!target) {
+      return;
+    }
+
+    target.open = true;
+    if (highlighted && highlighted !== target) {
+      highlighted.classList.remove("is-cross-reference-target");
+    }
+    highlighted = target;
+    target.classList.add("is-cross-reference-target");
+    target.addEventListener("blur", function handleBlur() {
+      target.classList.remove("is-cross-reference-target");
+      target.removeEventListener("blur", handleBlur);
+    });
+    target.scrollIntoView({ block: "center" });
+    target.focus({ preventScroll: true });
   }
 
   function pickDailyTerms(day) {
